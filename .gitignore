@@ -25,6 +25,7 @@ dist-ssr
 
 # Markdown files
 *.mdc
+*.mdx
 
 # Target directory
 src-tauri/target

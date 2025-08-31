@@ -27,6 +27,7 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": "all",
     "icon": [
       "icons/32x32.png",
@@ -35,5 +36,17 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVGRDRGQUNBMkI5NzRBM0QKUldROVNwY3J5dnJVNzdTdFVONUl6S1pGVk1PNUltRittdnFYZDJZU2VtaGRxTGpzRFZnaVlZTEkK",
+      "endpoints": [
+        "https://nobull.fit/download/{{target}}/{{arch}}/{{current_version}}",
+        "https://github.com/pathvoid/nobullfit-app/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }
