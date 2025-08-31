@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "NoBullFit",
+  "version": "0.1.0",
+  "identifier": "app.nobull.fit",
+  "build": {
+    "beforeDevCommand": "",
+    "devUrl": "http://localhost:4000",
+    "beforeBuildCommand": "",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "NoBullFit",
+        "width": 1200,
+        "height": 800,
+        "resizable": true,
+        "url": "https://nobull.fit",
+        "userAgent": "NBFAPP/1.0 (Tauri)"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' http://localhost:4000 https://nobull.fit; script-src 'self' 'unsafe-inline' http://localhost:4000 https://nobull.fit; style-src 'self' 'unsafe-inline' http://localhost:4000 https://nobull.fit; img-src 'self' data: http://localhost:4000 https://nobull.fit; connect-src 'self' http://localhost:4000 https://nobull.fit; font-src 'self' http://localhost:4000 https://nobull.fit; object-src 'none'; base-uri 'self'; form-action 'self' http://localhost:4000 https://nobull.fit; frame-ancestors 'none';"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}
