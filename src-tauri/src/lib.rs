@@ -14,7 +14,13 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![greet, read_text, pick_file])
+        .invoke_handler(tauri::generate_handler![
+            greet, 
+            read_text, 
+            pick_file,
+            check_for_updates,
+            download_and_install_update
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
