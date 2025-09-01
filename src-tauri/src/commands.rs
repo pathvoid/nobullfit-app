@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
-use std::{fs, path::Path, sync::Mutex};
-use tauri::{ipc::Channel, AppHandle};
-use tauri_plugin_updater::{Update, UpdaterExt};
+use std::{fs, path::Path};
+use tauri::AppHandle;
+use tauri_plugin_updater::UpdaterExt;
 
 #[derive(Serialize, Deserialize)]
 pub struct Record {
@@ -32,7 +32,7 @@ pub fn pick_file() -> Result<Option<String>, String> {
     Ok(None)
 }
 
-// Updater commands
+// Optional updater commands for manual testing (not used in automatic updates)
 #[allow(dead_code)]
 #[derive(Debug, thiserror::Error)]
 pub enum UpdaterError {
@@ -53,29 +53,12 @@ impl Serialize for UpdaterError {
 
 type UpdaterResult<T> = std::result::Result<T, UpdaterError>;
 
-#[derive(Clone, Serialize)]
-#[serde(tag = "event", content = "data")]
-pub enum DownloadEvent {
-    #[serde(rename_all = "camelCase")]
-    Started {
-        content_length: Option<u64>,
-    },
-    #[serde(rename_all = "camelCase")]
-    Progress {
-        chunk_length: usize,
-    },
-    Finished,
-}
-
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateMetadata {
     version: String,
     current_version: String,
 }
-
-#[allow(dead_code)]
-pub struct PendingUpdate(Mutex<Option<Update>>);
 
 #[tauri::command]
 pub async fn check_for_updates(app: AppHandle) -> UpdaterResult<Option<UpdateMetadata>> {
@@ -87,34 +70,4 @@ pub async fn check_for_updates(app: AppHandle) -> UpdaterResult<Option<UpdateMet
     });
 
     Ok(update_metadata)
-}
-
-#[tauri::command]
-pub async fn download_and_install_update(
-    app: AppHandle,
-    on_event: Channel<DownloadEvent>,
-) -> UpdaterResult<()> {
-    let update = app.updater()?.check().await?;
-
-    if let Some(update) = update {
-        let mut started = false;
-
-        update
-            .download_and_install(
-                |chunk_length, content_length| {
-                    if !started {
-                        let _ = on_event.send(DownloadEvent::Started { content_length });
-                        started = true;
-                    }
-
-                    let _ = on_event.send(DownloadEvent::Progress { chunk_length });
-                },
-                || {
-                    let _ = on_event.send(DownloadEvent::Finished);
-                },
-            )
-            .await?;
-    }
-
-    Ok(())
 }

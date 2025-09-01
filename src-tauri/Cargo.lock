@@ -2190,7 +2190,7 @@ dependencies = [
 
 [[package]]
 name = "nobullfit-app"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "serde",
  "serde_json",
@@ -2200,6 +2200,7 @@ dependencies = [
  "tauri-plugin-opener",
  "tauri-plugin-updater",
  "thiserror 1.0.69",
+ "tokio",
 ]
 
 [[package]]
