@@ -2,6 +2,10 @@ mod commands;
 
 use commands::*;
 use tauri_plugin_updater::UpdaterExt;
+use tauri::{
+    menu::*,
+    tray::TrayIconBuilder,
+};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -16,6 +20,33 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
+            // Setup tray icon
+            let handle = app.handle();
+            let menu = MenuBuilder::new(handle)
+                .item(&MenuItem::new(handle, &format!("NoBullFit v{}", env!("CARGO_PKG_VERSION")), false, None::<&str>)?)
+                .separator()
+                .text("quit", "Quit")
+                .build()?;
+            
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .show_menu_on_left_click(true)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "quit" => {
+                        println!("quit menu item was clicked");
+                        app.exit(0);
+                    }
+                    "version" => {
+                        // Version item is disabled, no action needed
+                        println!("version menu item was clicked (disabled)");
+                    }
+                    _ => {
+                        println!("menu item {:?} not handled", event.id);
+                    }
+                })
+                .build(app)?;
+            
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 check_for_updates_on_startup(handle).await;
