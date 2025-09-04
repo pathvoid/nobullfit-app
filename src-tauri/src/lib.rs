@@ -23,10 +23,16 @@ pub fn run() {
         }));
     }
 
-    builder
-        .plugin(tauri_plugin_updater::Builder::new().build())
+    let mut builder = builder
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_dialog::init());
+    
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    }
+
+    builder
         .setup(|app| {
             #[cfg(desktop)]
             {
@@ -63,10 +69,13 @@ pub fn run() {
                     .build(app)?;
             }
 
-            let handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                check_for_updates_on_startup(handle).await;
-            });
+            #[cfg(desktop)]
+            {
+                let handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    check_for_updates_on_startup(handle).await;
+                });
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
