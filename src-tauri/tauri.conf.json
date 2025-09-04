@@ -44,7 +44,7 @@
         "https://github.com/pathvoid/nobullfit-app/releases/latest/download/latest.json"
       ],
       "windows": {
-        "installMode": "passive"
+        "installMode": "basicUi"
       }
     }
   }
