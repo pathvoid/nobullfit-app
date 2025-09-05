@@ -36,9 +36,62 @@ pub fn run() {
         .setup(|app| {
             #[cfg(desktop)]
             {
-                // Setup tray icon
+                // Setup desktop menu bar
                 let handle = app.handle();
+                let import_menu = SubmenuBuilder::new(handle, "Import")
+                    .text("import_csv", "CSV...")
+                    .build()?;
+                
+                let file_menu = SubmenuBuilder::new(handle, "File")
+                    .item(&import_menu)
+                    .separator()
+                    .text("quit", "Quit")
+                    .build()?;
+
                 let menu = MenuBuilder::new(handle)
+                    .item(&file_menu)
+                    .build()?;
+
+                // Set the menu for the main window
+                if let Some(window) = app.get_webview_window("main") {
+                    let app_handle = app.handle().clone();
+                    window.set_menu(menu)?;
+                    window.on_menu_event(move |_window, event| match event.id.as_ref() {
+                        "import_csv" => {
+                            println!("Import CSV menu item was clicked");
+                            // Call the import function directly from Rust
+                            let app_handle_clone = app_handle.clone();
+                            tauri::async_runtime::spawn(async move {
+                                match import_csv_from_menu(app_handle_clone.clone()).await {
+                                    Ok(result) => {
+                                        if result == "File selection cancelled" {
+                                            println!("CSV import cancelled by user");
+                                        } else {
+                                            println!("CSV import completed successfully");
+                                        }
+                                    },
+                                    Err(e) => {
+                                        println!("CSV import failed: {}", e);
+                                        // Show error dialog
+                                        if let Some(window) = app_handle_clone.get_webview_window("main") {
+                                            let _ = window.eval(&format!("alert('Import failed: {}')", e));
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        "quit" => {
+                            println!("quit menu item was clicked");
+                            app_handle.exit(0);
+                        }
+                        _ => {
+                            println!("menu item {:?} not handled", event.id);
+                        }
+                    });
+                }
+
+                // Setup tray icon
+                let tray_menu = MenuBuilder::new(handle)
                     .item(&MenuItem::new(
                         handle,
                         &format!("NoBullFit v{}", env!("CARGO_PKG_VERSION")),
@@ -51,7 +104,7 @@ pub fn run() {
 
                 let _tray = TrayIconBuilder::new()
                     .icon(app.default_window_icon().unwrap().clone())
-                    .menu(&menu)
+                    .menu(&tray_menu)
                     .show_menu_on_left_click(true)
                     .on_menu_event(|app, event| match event.id.as_ref() {
                         "quit" => {
@@ -81,7 +134,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             read_text,
-            pick_file,
+            pick_csv_file,
+            validate_csv,
+            import_csv_from_menu,
             check_for_updates
         ])
         .run(tauri::generate_context!())

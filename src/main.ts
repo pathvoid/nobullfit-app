@@ -6,37 +6,50 @@ export function isApp(): boolean {
 }
 
 // File import functionality for app
-export async function pickAndImportCSV(): Promise<void> {
+export async function importCsvFile(): Promise<void> {
   if (!isApp()) {
     alert("App features unavailable in browser.");
     return;
   }
   
   try {
-    const text: string = await invoke("read_text", { 
-      path: "/tmp/example.csv", 
+    // Open file picker dialog
+    const filePath: string | null = await invoke("pick_csv_file");
+    
+    if (!filePath) {
+      // User cancelled file selection
+      return;
+    }
+    
+    // Read the selected file
+    const content: string = await invoke("read_text", { 
+      path: filePath, 
       max_bytes: 2_000_000 
     });
     
-    // Parse CSV and normalize data
-    const rows = parseCsv(text);
-    const entries = normalizeRows(rows);
+    // Validate the CSV content
+    const validation: any = await invoke("validate_csv", { content });
     
-    // Send to Phoenix backend
-    await fetch("/api/import", {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json", 
-        "x-csrf-token": getCsrf() 
-      },
-      body: JSON.stringify({ entries })
-    });
+    if (validation.is_valid) {
+      alert(`SUCCESS: ${validation.message}`);
+      console.log("CSV validation successful:", validation);
+      
+      // TODO: In the future, we'll parse and import the data here
+      // For now, just show the validation result
+    } else {
+      alert(`ERROR: Invalid CSV - ${validation.message}`);
+      console.error("CSV validation failed:", validation);
+    }
     
-    console.log("Import completed successfully");
   } catch (error) {
     console.error("Import failed:", error);
     alert("Import failed: " + error);
   }
+}
+
+// Legacy function for backward compatibility
+export async function pickAndImportCSV(): Promise<void> {
+  return importCsvFile();
 }
 
 // Helper functions
@@ -66,5 +79,6 @@ function getCsrf(): string {
 // Make functions available globally for the embedded website
 (window as any).NBFAPP = {
   isApp,
+  importCsvFile,
   pickAndImportCSV
 };
